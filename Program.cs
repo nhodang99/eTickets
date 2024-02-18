@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Private configs
 builder.Configuration.AddIniFile("config.ini", optional: false, reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
-builder.Configuration.AddCommandLine(args);
+// builder.Configuration.AddCommandLine(args);
 
 // Add DbContext config
 builder.Services.AddDbContext<AppDbContext>(

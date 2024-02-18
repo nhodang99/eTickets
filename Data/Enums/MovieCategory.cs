@@ -1,12 +1,11 @@
-namespace eTickets.Data
+namespace eTickets.Data;
+
+public enum MovieCategory
 {
-   public enum MovieCategory
-   {
-      Action,
-      Comedy,
-      Drama,
-      Documentary,
-      Cartoon,
-      Horror
-   }
+   Action,
+   Comedy,
+   Drama,
+   Documentary,
+   Cartoon,
+   Horror
 }
