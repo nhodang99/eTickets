@@ -6,6 +6,8 @@ using eTickets.Data.Base;
 using eTickets.Models;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Rewrite;
+using eTickets.Data.Cart;
+using eTicket.Data.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,11 @@ builder.Services.AddScoped<IEntityBaseRepository<Actor>, ActorsService>();
 builder.Services.AddScoped<IProducersService, ProducersService>();
 builder.Services.AddScoped<ICinemasService, CinemasService>();
 builder.Services.AddScoped<IMoviesService, MoviesService>();
+builder.Services.AddScoped<IOrdersService, OrdersServices>();
+
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddScoped(sc => ShoppingCart.GetShoppingCart(sc));
+builder.Services.AddSession();
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -46,6 +53,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthorization();
 
@@ -69,6 +77,10 @@ app.UseAuthorization();
 //     }
 //     await next(context);
 // });
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Movies}/{action=Index}/{id?}");
 
 // Seed database
 AppDbInitializer.Seed(app);

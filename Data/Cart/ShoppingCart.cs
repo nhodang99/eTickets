@@ -11,6 +11,7 @@ public class ShoppingCart(AppDbContext context)
 
    public List<ShoppingCartItem> ShoppingCartItems { get; set; }
 
+
    public List<ShoppingCartItem> GetShoppingCartItems()
    {
       return ShoppingCartItems ??= [.. _context.ShoppingCartItems.Where(item => item.ShoppingCardId == ShoppingCardId)
@@ -21,9 +22,26 @@ public class ShoppingCart(AppDbContext context)
                                                                      .Select(item => item.Movie.Price * item.Amount)
                                                                      .Sum();
 
-   public void AddItemToCart(Movie movie)
+   public static ShoppingCart GetShoppingCart(IServiceProvider services)
    {
-      var item = _context.ShoppingCartItems.FirstOrDefault(item => item.ShoppingCardId == ShoppingCardId && item.Movie.Id == movie.Id);
+      ISession? session = services.GetRequiredService<IHttpContextAccessor>()?.HttpContext?.Session;
+      var context = services.GetService<AppDbContext>();
+      if (session is null || context is null)
+      {
+         throw new NullReferenceException("Http session or db context null");
+      }
+
+      var cartId = session.GetString("CardId") ?? Guid.NewGuid().ToString();
+      session.SetString("CardId", cartId);
+      return new ShoppingCart(context)
+      {
+         ShoppingCardId = cartId
+      };
+   }
+
+   public async Task AddItemToCart(Movie movie)
+   {
+      var item = _context.ShoppingCartItems.FirstOrDefault(n => n.ShoppingCardId == ShoppingCardId && n.Movie.Id == movie.Id);
       if (item is null)
       {
          item = new ShoppingCartItem
@@ -32,17 +50,18 @@ public class ShoppingCart(AppDbContext context)
             Movie = movie,
             Amount = 1
          };
+         _context.ShoppingCartItems.Add(item);
       }
       else
       {
          item.Amount++;
       }
-      _context.SaveChangesAsync();
+      await _context.SaveChangesAsync();
    }
 
-   public void RemoveItemFromCart(Movie movie)
+   public async Task RemoveItemFromCart(Movie movie)
    {
-      var item = _context.ShoppingCartItems.FirstOrDefault(item => item.ShoppingCardId == ShoppingCardId && item.Movie.Id == movie.Id);
+      var item = _context.ShoppingCartItems.FirstOrDefault(n => n.ShoppingCardId == ShoppingCardId && n.Movie.Id == movie.Id);
       if (item is not null)
       {
          if (item.Amount > 1)
@@ -54,6 +73,13 @@ public class ShoppingCart(AppDbContext context)
             _context.ShoppingCartItems.Remove(item);
          }
       }
-      _context.SaveChangesAsync();
+      await _context.SaveChangesAsync();
+   }
+
+   public async Task ClearShoppingCartAsync()
+   {
+      var items = await _context.ShoppingCartItems.Where(n => n.ShoppingCardId == ShoppingCardId).ToListAsync();
+      _context.ShoppingCartItems.RemoveRange(items);
+      await _context.SaveChangesAsync();
    }
 }
