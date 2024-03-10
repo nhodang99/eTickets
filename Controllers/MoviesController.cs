@@ -1,20 +1,25 @@
 using eTickets.Data.Services;
+using eTickets.Data.Static;
 using eTickets.Data.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace eTickets.Controllers;
 
+[Authorize(Roles = UserRoles.Admin)]
 public class MoviesController(IMoviesService service) : Controller
 {
    private readonly IMoviesService _service = service;
 
+   [AllowAnonymous]
    public async Task<IActionResult> Index()
    {
       var data = await _service.GetAllAsync(n => n.Cinema);
       return View(data);
    }
 
+   [AllowAnonymous]
    public async Task<IActionResult> Filter(string searchString) // Must be the same name as in the razor page
    {
       var movies = await _service.GetAllAsync(n => n.Cinema);
@@ -31,6 +36,7 @@ public class MoviesController(IMoviesService service) : Controller
    }
 
    // GET: movies/details/id
+   [AllowAnonymous]
    public async Task<IActionResult> Details(int id)
    {
       var movieDetails = await _service.getMovieByIdAsync(id);

@@ -81,5 +81,6 @@ public class ShoppingCart(AppDbContext context)
       var items = await _context.ShoppingCartItems.Where(n => n.ShoppingCardId == ShoppingCardId).ToListAsync();
       _context.ShoppingCartItems.RemoveRange(items);
       await _context.SaveChangesAsync();
+      ShoppingCartItems.Clear();
    }
 }

@@ -1,4 +1,6 @@
+using eTickets.Data.Static;
 using eTickets.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace eTickets.Data;
 
@@ -6,16 +8,15 @@ public class AppDbInitializer
 {
     public static void Seed(IApplicationBuilder applicationBuilder)
     {
-        using (var serviceScope = applicationBuilder.ApplicationServices.CreateScope())
+        using var serviceScope = applicationBuilder.ApplicationServices.CreateScope();
+        var context = serviceScope.ServiceProvider.GetService<AppDbContext>();
+
+        context.Database.EnsureCreated();
+
+        //Cinema
+        if (!context.Cinemas.Any())
         {
-            var context = serviceScope.ServiceProvider.GetService<AppDbContext>();
-
-            context.Database.EnsureCreated();
-
-            //Cinema
-            if (!context.Cinemas.Any())
-            {
-                context.Cinemas.AddRange(new List<Cinema>()
+            context.Cinemas.AddRange(new List<Cinema>()
                     {
                         new()
                         {
@@ -48,12 +49,12 @@ public class AppDbInitializer
                             Description = "This is the description of the first cinema"
                         },
                     });
-                context.SaveChanges();
-            }
-            //Actors
-            if (!context.Actors.Any())
-            {
-                context.Actors.AddRange(new List<Actor>()
+            context.SaveChanges();
+        }
+        //Actors
+        if (!context.Actors.Any())
+        {
+            context.Actors.AddRange(new List<Actor>()
                     {
                         new()
                         {
@@ -87,12 +88,12 @@ public class AppDbInitializer
                             ProfilePictureURL = "http://dotnethow.net/images/actors/actor-5.jpeg"
                         }
                     });
-                context.SaveChanges();
-            }
-            //Producers
-            if (!context.Producers.Any())
-            {
-                context.Producers.AddRange(new List<Producer>()
+            context.SaveChanges();
+        }
+        //Producers
+        if (!context.Producers.Any())
+        {
+            context.Producers.AddRange(new List<Producer>()
                     {
                         new()
                         {
@@ -126,12 +127,12 @@ public class AppDbInitializer
                             ProfilePictureURL = "http://dotnethow.net/images/producers/producer-5.jpeg"
                         }
                     });
-                context.SaveChanges();
-            }
-            //Movies
-            if (!context.Movies.Any())
-            {
-                context.Movies.AddRange(new List<Movie>()
+            context.SaveChanges();
+        }
+        //Movies
+        if (!context.Movies.Any())
+        {
+            context.Movies.AddRange(new List<Movie>()
                     {
                         new()
                         {
@@ -206,12 +207,12 @@ public class AppDbInitializer
                             MovieCategory = MovieCategory.Drama
                         }
                     });
-                context.SaveChanges();
-            }
-            //Actors & Movies
-            if (!context.Actors_Movies.Any())
-            {
-                context.Actors_Movies.AddRange(new List<Actor_Movie>()
+            context.SaveChanges();
+        }
+        //Actors & Movies
+        if (!context.Actors_Movies.Any())
+        {
+            context.Actors_Movies.AddRange(new List<Actor_Movie>()
                     {
                         new()
                         {
@@ -307,8 +308,55 @@ public class AppDbInitializer
                             MovieId = 6
                         },
                     });
-                context.SaveChanges();
-            }
+            context.SaveChanges();
+        }
+    }
+
+    public static async Task SeedUsersAndRolesAsync(IApplicationBuilder applicationBuilder)
+    {
+        using var serviceScope = applicationBuilder.ApplicationServices.CreateScope();
+
+        // Roles
+        var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
+        {
+            await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+        }
+        if (!await roleManager.RoleExistsAsync(UserRoles.User))
+        {
+            await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+        }
+
+        // Users
+        var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        string adminEmail = "admin@etickets.com";
+        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        if (adminUser is null)
+        {
+            var newAdminUser = new ApplicationUser
+            {
+                FullName = "Admin user",
+                UserName = "Admin-user",
+                Email = adminEmail,
+                EmailConfirmed = true
+            };
+            await userManager.CreateAsync(newAdminUser, "Coding@1234?");
+            await userManager.AddToRoleAsync(newAdminUser, UserRoles.Admin);
+        }
+
+        string appUserEmail = "user@etickets.com";
+        var appUser = await userManager.FindByEmailAsync(appUserEmail);
+        if (appUser is null)
+        {
+            var newAppUser = new ApplicationUser
+            {
+                FullName = "Application user",
+                UserName = "App-user",
+                Email = appUserEmail,
+                EmailConfirmed = true
+            };
+            await userManager.CreateAsync(newAppUser, "Coding@1234?");
+            await userManager.AddToRoleAsync(newAppUser, UserRoles.User);
         }
     }
 }

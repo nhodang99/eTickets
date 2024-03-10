@@ -1,5 +1,6 @@
 using eTickets.Data;
 using eTickets.Data.Services;
+using eTickets.Data.Static;
 using eTickets.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,11 +10,15 @@ public class OrdersServices(AppDbContext context) : IOrdersService
 {
    private readonly AppDbContext _context = context;
 
-   public async Task<List<Order>> GetOrdersByUserIdAsync(string userId)
+   public async Task<List<Order>> GetOrdersByUserIdAndRoleAsync(string userId, string userRole)
    {
-      var orders = await _context.Orders.Include(n => n.OrderItems)
-                                          .ThenInclude(n => n.Movie)
-                                          .Where(n => n.UserId == userId).ToListAsync();
+      var orders = await _context.Orders.Include(n => n.User)
+                                          .Include(n => n.OrderItems).ThenInclude(n => n.Movie)
+                                          .ToListAsync();
+      if (userRole != UserRoles.Admin)
+      {
+         orders = orders.Where(n => n.UserId == userId).ToList();
+      }
       return orders;
    }
 

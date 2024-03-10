@@ -1,14 +1,17 @@
 using eTickets.Data.Base;
-using eTickets.Data.Services;
+using eTickets.Data.Static;
 using eTickets.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace eTickets.Controllers;
 
+[Authorize(Roles = UserRoles.Admin)]
 public class ActorsController(IEntityBaseRepository<Actor> service) : Controller
 {
    private readonly IEntityBaseRepository<Actor> _service = service;
 
+   [AllowAnonymous]
    public async Task<IActionResult> Index()
    {
       var allActors = await _service.GetAllAsync();
@@ -33,6 +36,7 @@ public class ActorsController(IEntityBaseRepository<Actor> service) : Controller
    }
 
    // GET: actors/details/id
+   [AllowAnonymous]
    public async Task<IActionResult> Details(int id)
    {
       var actorDetails = await _service.GetByIdAsync(id);
