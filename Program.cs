@@ -14,13 +14,15 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // Private configs
-builder.Configuration.AddIniFile("config.ini", optional: false, reloadOnChange: true);
-builder.Configuration.AddEnvironmentVariables();
-// builder.Configuration.AddCommandLine(args);
+// builder.Configuration.AddIniFile("config.ini", optional: false, reloadOnChange: true);
+// builder.Configuration.AddEnvironmentVariables();
+// // Add DbContext config
+// builder.Services.AddDbContext<AppDbContext>(
+//     options => options.UseSqlServer(builder.Configuration["Database:ConnectionString"]));
 
 // Add DbContext config
 builder.Services.AddDbContext<AppDbContext>(
-    options => options.UseSqlServer(builder.Configuration["Database:ConnectionString"]));
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString")));
 
 builder.Services.AddScoped<IEntityBaseRepository<Actor>, ActorsService>();
 builder.Services.AddScoped<IProducersService, ProducersService>();
